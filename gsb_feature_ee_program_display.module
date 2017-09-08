@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Code for the GSB Feature Exec-ed Program Display feature.
+ */
+
+/**
+ * @file
+ * Code for the GSB Feature Exec-ed Program Display feature.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function gsb_feature_ee_program_display_menu() {
+  $items = array();
+  $items['admin/config/gsb/eefeaturedprograms'] = array(
+    'title' => 'EE Featured Programs',
+    'description' => 'EE Featured Programs',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gsb_feature_ee_program_display_config_featured_programs'),
+    'access arguments' => array('administer exed-ed featured programs'),
+    'file' => 'gsb_feature_ee_program_display.admin.inc',
+  );
+  return $items;
+}
