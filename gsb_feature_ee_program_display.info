@@ -3,3 +3,4 @@ core = 7.x
 package = GSB
 version = 7.x-1.00
 project = gsb_feature_ee_program_display
+features[features_api][] = api:2
