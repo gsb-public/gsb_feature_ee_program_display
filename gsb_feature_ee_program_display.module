@@ -4,6 +4,8 @@
  * Code for the GSB Feature Exec-ed Program Display feature.
  */
 
+include_once 'gsb_feature_ee_program_display.features.inc';
+
 /**
  * @file
  * Code for the GSB Feature Exec-ed Program Display feature.
@@ -23,4 +25,81 @@ function gsb_feature_ee_program_display_menu() {
     'file' => 'gsb_feature_ee_program_display.admin.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function gsb_feature_ee_program_display_permission() {
+  return array(
+    'administer exed-ed featured programs' => array(
+      'title' => t('Administer Exec-Ed Featured Programs'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function gsb_feature_ee_program_display_field_extra_fields() {
+  $extra = array();
+  $extra['node']['page']['display']['gsb_feature_ee_program_display_featured_programs_field'] = array(
+    'label' => t('Featured Programs'),
+    'description' => t('Featured Programs'),
+    'weight' => 0,
+  );
+  return $extra;
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function gsb_feature_ee_program_display_node_view_alter(&$build) {
+  // If this field is not configured for this view mode, skip it.
+  $fields = field_extra_fields_get_display('node', $build['#node']->type, $build['#view_mode']);
+  if (empty($fields['gsb_feature_ee_program_display_featured_programs_field']['visible'])) {
+    return;
+  }
+
+  if ($build['#node']->type == 'page') {
+    $featured_programs = _gsb_feature_ee_program_display_featured_programs_field_markup_featured_programs();
+    $build['gsb_feature_ee_program_display_featured_programs_field'] = array(
+      '#markup' => '<fieldset class="field-group-fieldset collapsible collapsed form-wrapper ee-featured-programs-fieldset"><legend><span class="fieldset-legend">' .
+                   t('Featured Programs') .
+                   '</span></legend><div class="fieldset-wrapper">' .
+                   $featured_programs .
+                   '</div></fieldset>',
+    );
+  }
+}
+
+/**
+ * _gsb_feature_ee_program_display_featured_programs_field_markup_featured_programs()
+ *
+ * returns the markup for the 3 featured programs created in the
+ * admin config page.
+ *   (see gsb_feature_ee_program_display.admin.inc - gsb_feature_ee_program_display_config_featured_programs)
+ */
+function _gsb_feature_ee_program_display_featured_programs_field_markup_featured_programs() {
+  $html = '';
+  $featured_programs = variable_get('gsb_feature_ee_program_display_config_featured_programs', array());
+  foreach( $featured_programs as $value ) {
+    if ($value) {
+      $node = node_load($value);
+      if ($node && node_access('view', $node)) {
+        $view = node_view($node, 'page_featured_programs');
+        $html .= drupal_render($view);
+      }
+    }
+  }
+  return '<div class="ee-featured-programs-wrapper"><div class="superhead">' . t('Featured Programs') . '</div>' . $html . '</div>';
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function gsb_feature_ee_program_display_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools') {
+    return "plugins/$plugin_type";
+  }
 }
