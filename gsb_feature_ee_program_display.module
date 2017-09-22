@@ -48,6 +48,11 @@ function gsb_feature_ee_program_display_field_extra_fields() {
     'description' => t('Featured Programs'),
     'weight' => 0,
   );
+  $extra['node']['program']['display']['gsb_feature_ee_program_display_featured_programs_program_location_field'] = array(
+    'label' => t('Featured Program Location'),
+    'description' => t('Featured Program Location'),
+    'weight' => 0,
+  );
   return $extra;
 }
 
@@ -55,22 +60,82 @@ function gsb_feature_ee_program_display_field_extra_fields() {
  * Implements hook_node_view().
  */
 function gsb_feature_ee_program_display_node_view_alter(&$build) {
+
   // If this field is not configured for this view mode, skip it.
   $fields = field_extra_fields_get_display('node', $build['#node']->type, $build['#view_mode']);
-  if (empty($fields['gsb_feature_ee_program_display_featured_programs_field']['visible'])) {
+
+  if (!empty($fields['gsb_feature_ee_program_display_featured_programs_field']) && $fields['gsb_feature_ee_program_display_featured_programs_field']['visible']) {
+    if ($build['#node']->type == 'page') {
+      $featured_programs = _gsb_feature_ee_program_display_featured_programs_field_markup_featured_programs();
+      $build['gsb_feature_ee_program_display_featured_programs_field'] = array(
+        '#markup' => '<fieldset class="field-group-fieldset collapsible collapsed form-wrapper ee-featured-programs-fieldset"><legend><span class="fieldset-legend">' .
+          t('Featured Programs') .
+          '</span></legend><div class="fieldset-wrapper">' .
+          $featured_programs .
+          '</div></fieldset>',
+      );
+    }
+  }
+
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function gsb_feature_ee_program_display_entity_view($entity, $type, $view_mode, $langcode) {
+
+  $fred = 'fred';
+
+  if ($view_mode != "page_featured_programs") {
     return;
   }
 
-  if ($build['#node']->type == 'page') {
-    $featured_programs = _gsb_feature_ee_program_display_featured_programs_field_markup_featured_programs();
-    $build['gsb_feature_ee_program_display_featured_programs_field'] = array(
-      '#markup' => '<fieldset class="field-group-fieldset collapsible collapsed form-wrapper ee-featured-programs-fieldset"><legend><span class="fieldset-legend">' .
-                   t('Featured Programs') .
-                   '</span></legend><div class="fieldset-wrapper">' .
-                   $featured_programs .
-                   '</div></fieldset>',
-    );
+  if ($type != "node" && $entity->type != "program") {
+    return;
   }
+
+  gsb_feature_ee_program_display_program_location_field($entity, $type, $view_mode, $langcode);
+
+}
+
+function gsb_feature_ee_program_display_program_location_field($entity, $type, $view_mode, $langcode) {
+
+  $nid = $entity->nid;
+  $language = $entity->language;
+
+  // Lookup the program instances for this program
+  $program_instance_nids = _gsb_feature_program_ct_get_all_program_instances(array($nid), "all");
+
+  $program_format_out = '';
+
+  foreach ($program_instance_nids as $pi_nid) {
+
+    $instance_wrapper = entity_metadata_wrapper('node', $pi_nid);
+
+    $program_format_location = $instance_wrapper->field_program_location->value();
+    $ewrap_format_location = entity_metadata_wrapper('field_collection_item', $program_format_location);
+
+    $program_format = $ewrap_format_location->field_program_format->value();
+    $program_location = $ewrap_format_location->field_program_location_link->value();
+
+    // get the program format name
+    if (!empty($program_format->name)) {
+      $program_format_out .= $program_format->name;
+    }
+
+    // we only need one...
+    break;
+  }
+
+  $container = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('field-name-program-format'),
+    ),
+    'content' => array('#markup' => $program_format_out)
+  );
+
+  $entity->content['gsb_feature_ee_program_display_featured_programs_program_location_field'] = $container;
 }
 
 /**
