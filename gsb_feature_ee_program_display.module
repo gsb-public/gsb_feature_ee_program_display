@@ -1,10 +1,8 @@
 <?php
 /**
  * @file
- * Code for the GSB Feature Exec-ed Program Display feature.
+ * Drupal needs this blank file.
  */
-
-include_once 'gsb_feature_ee_program_display.features.inc';
 
 /**
  * @file
